@@ -1,26 +1,88 @@
 {
-  "updated": "2026-11-19T09:19:00-06:00",
+  "updated": "2026-11-19T19:07:10Z",
   "notice": "",
   "services": [
-    { "group": "Internal", "name": "Munis", "description": "ERP", "status": "maintenance", "note": "" },
-    { "group": "Internal", "name": "Executime", "description": "Time and Attendance", "status": "maintenance", "note": "" },
-    { "group": "Internal", "name": "Assurance", "description": "Revenue", "status": "operational", "note": "" },
-    { "group": "Internal", "name": "Network", "description": "", "status": "operational", "note": "" },
-    { "group": "Internal", "name": "Other Internal Services", "description": "", "status": "operational", "note": "" },
-
-    { "group": "External", "name": "Microsoft", "description": "Outlook, Teams, Copilot, ect", "status": "operational", "note": "" },
-    { "group": "External", "name": "Cloudflare", "description": "Internet Security", "status": "operational", "note": "" },
-    { "group": "External", "name": "Internet", "description": "", "status": "operational", "note": "" },
-    { "group": "External", "name": "Remote Support Tools", "description": "Cis support tool", "status": "operational", "note": "" },
-    { "group": "External", "name": "Other External Services", "description": "", "status": "operational", "note": "" }
+    {
+      "group": "Internal",
+      "name": "Munis",
+      "description": "ERP",
+      "status": "maintenance",
+      "note": ""
+    },
+    {
+      "group": "Internal",
+      "name": "Executime",
+      "description": "Time and Attendance",
+      "status": "maintenance",
+      "note": ""
+    },
+    {
+      "group": "Internal",
+      "name": "Assurance",
+      "description": "Revenue",
+      "status": "operational",
+      "note": ""
+    },
+    {
+      "group": "Internal",
+      "name": "Network",
+      "description": "",
+      "status": "operational",
+      "note": ""
+    },
+    {
+      "group": "Internal",
+      "name": "Other Internal Services",
+      "description": "",
+      "status": "operational",
+      "note": ""
+    },
+    {
+      "group": "External",
+      "name": "Microsoft",
+      "description": "Outlook, Teams, Copilot, ect",
+      "status": "partial_outage",
+      "note": "Outlook not sending or receiving."
+    },
+    {
+      "group": "External",
+      "name": "Cloudflare",
+      "description": "Internet Security",
+      "status": "operational",
+      "note": ""
+    },
+    {
+      "group": "External",
+      "name": "Internet",
+      "description": "",
+      "status": "operational",
+      "note": ""
+    },
+    {
+      "group": "External",
+      "name": "Remote Support Tools",
+      "description": "Cis support tool",
+      "status": "operational",
+      "note": ""
+    },
+    {
+      "group": "External",
+      "name": "Other External Services",
+      "description": "",
+      "status": "operational",
+      "note": ""
+    }
   ],
   "incidents": [],
   "maintenance": [
     {
-  "title": "Munis / Executime",
-  "affected": ["ERP and Timeclock"],
-  "start": "2026-11-22T12:00:00Z",
-  "message": "Emails will be sent once available."
-}
+      "title": "Munis / Executime",
+      "affected": [
+        "ERP and Timeclock"
+      ],
+      "start": "2026-11-22T12:00:00Z",
+      "end": "2026-11-27T06:00:00Z",
+      "message": "Emails will be sent once available."
+    }
   ]
 }
