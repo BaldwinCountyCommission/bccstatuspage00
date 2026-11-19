@@ -2,8 +2,8 @@
   "updated": "2026-11-19T09:19:00-06:00",
   "notice": "",
   "services": [
-    { "group": "Internal", "name": "Munis", "description": "ERP", "status": "operational", "note": "" },
-    { "group": "Internal", "name": "Executime", "description": "Time and Attendance", "status": "operational", "note": "" },
+    { "group": "Internal", "name": "Munis", "description": "ERP", "status": "maintenance", "note": "" },
+    { "group": "Internal", "name": "Executime", "description": "Time and Attendance", "status": "maintenance", "note": "" },
     { "group": "Internal", "name": "Assurance", "description": "Revenue", "status": "operational", "note": "" },
     { "group": "Internal", "name": "Network", "description": "", "status": "operational", "note": "" },
     { "group": "Internal", "name": "Other Internal Services", "description": "", "status": "operational", "note": "" },
