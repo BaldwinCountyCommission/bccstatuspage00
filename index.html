@@ -406,15 +406,52 @@
     var REFRESH_MS = 60 * 1000;     // re-check every minute while the tab is visible
     var HISTORY_DAYS = 14;          // resolved incidents shown under "Past Incidents"
 
-    function sources() {
-      var path = REPO.owner + "/" + REPO.name;
-      return [
-        // 1. raw file (CDN, no rate limit). Query string skips stale browser caches.
-        { url: "https://raw.githubusercontent.com/" + path + "/" + REPO.branch + "/" + REPO.file + "?t=" + Date.now() },
-        // 2. fallback: GitHub API (always current, but limited to 60 requests/hour per visitor)
-        { url: "https://api.github.com/repos/" + path + "/contents/" + REPO.file + "?ref=" + REPO.branch,
-          headers: { Accept: "application/vnd.github.raw+json" } }
+    /* GitHub's raw-file server caches each file for about 5 minutes and ignores
+       cache-busting query strings, so the branch URL can serve an old copy. To get
+       changes within a minute, the page asks the GitHub API for the branch's latest
+       commit (never cached) and then loads status.json at that exact commit. Each
+       commit has its own URL, so there is no stale copy to serve.
+       The API allows 60 unauthenticated requests per hour per IP address. If that runs
+       out (e.g. many visitors behind one office IP), the page falls back to the branch
+       URL, which may be up to ~5 minutes behind, until the limit resets. */
+    var REPO_PATH = REPO.owner + "/" + REPO.name;
+    var API = "https://api.github.com/repos/" + REPO_PATH;
+    var RAW = "https://raw.githubusercontent.com/" + REPO_PATH + "/";
+    var apiPausedUntil = 0;
+
+    function noteRateLimit(r) {
+      var remaining = parseInt(r.headers.get("x-ratelimit-remaining"), 10);
+      var reset = parseInt(r.headers.get("x-ratelimit-reset"), 10) * 1000;
+      if (r.status === 403 || r.status === 429 || remaining === 0) {
+        apiPausedUntil = reset > Date.now() ? reset : Date.now() + 10 * 60 * 1000;
+        console.warn("[status] GitHub API limit reached; using the cached file until " + new Date(apiPausedUntil).toLocaleTimeString());
+      }
+    }
+
+    function latestSha() {
+      if (Date.now() < apiPausedUntil) return Promise.reject(new Error("API rate limit, paused"));
+      return fetch(API + "/git/ref/heads/" + REPO.branch, { cache: "no-store" }).then(function (r) {
+        noteRateLimit(r);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function (j) {
+        var sha = j && j.object && j.object.sha;
+        if (!/^[0-9a-f]{40}$/.test(sha || "")) throw new Error("No commit id");
+        return sha;
+      });
+    }
+
+    function sources(sha) {
+      if (sha) return [
+        { url: RAW + sha + "/" + REPO.file, fresh: true },
+        { url: API + "/contents/" + REPO.file + "?ref=" + sha,
+          headers: { Accept: "application/vnd.github.raw+json" }, fresh: true, api: true }
       ];
+      var list = [{ url: RAW + REPO.branch + "/" + REPO.file, fresh: false }];   // may be up to ~5 min old
+      if (Date.now() >= apiPausedUntil) list.push({
+        url: API + "/contents/" + REPO.file + "?ref=" + REPO.branch,
+        headers: { Accept: "application/vnd.github.raw+json" }, fresh: true, api: true });
+      return list;
     }
 
     /* ---------- Status vocabulary ---------- */
@@ -692,7 +729,9 @@
     }
 
     /* ---------- Loading ---------- */
-    var loading = false, lastGood = null, nextAt = Date.now() + REFRESH_MS;
+    var loading = false, lastGood = null, lastSha = null, lastFreshAt = 0;
+    var nextAt = Date.now() + REFRESH_MS;
+    var STALE_GUARD_MS = 6 * 60 * 1000;   // how long the branch URL can lag behind a commit
 
     function done() {
       loading = false;
@@ -702,6 +741,7 @@
 
     function fetchJSON(src) {
       return fetch(src.url, { cache: "no-store", headers: src.headers || {} }).then(function (r) {
+        if (src.api) noteRateLimit(r);
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
       }).then(function (j) {
@@ -710,26 +750,48 @@
       });
     }
 
+    function show(data) {
+      lastGood = data;
+      try { render(data); } catch (e) { console.error("[status] render failed", e); renderError(); }
+    }
+
+    function failed() {
+      // Keep showing the last good data if we had it; otherwise show the error state
+      if (lastGood) setText("d-checked", fmtTime.format(new Date()) + " (retrying)");
+      else renderError();
+    }
+
     function load() {
       if (loading) return;
       loading = true;
       setText("d-next", "Checking now…");
-      var list = sources(), i = 0;
-      (function next() {
-        fetchJSON(list[i]).then(function (data) {
-          lastGood = data;
-          try { render(data); } catch (e) { console.error("[status] render failed", e); renderError(); }
-          done();
-        }).catch(function (err) {
-          console.warn("[status] " + list[i].url.split("?")[0] + " failed:", err.message);
-          i++;
-          if (i < list.length) return next();
-          done();
-          // Keep showing the last good data if we had it; otherwise show the error state
-          if (lastGood) setText("d-checked", fmtTime.format(new Date()) + " (retrying)");
-          else renderError();
-        });
-      })();
+
+      latestSha().then(function (sha) { return sha; }, function (err) {
+        console.warn("[status] latest commit lookup failed:", err.message);
+        return null;
+      }).then(function (sha) {
+        // Nothing committed since the last check: re-render what we have (updates times, expires maintenance)
+        if (sha && sha === lastSha && lastGood) { show(lastGood); return done(); }
+
+        // Without a commit id, the fallback URL may be a few minutes old. If we showed
+        // fresh data recently, keep it rather than risk flipping back to an older copy.
+        if (!sha && lastGood && Date.now() - lastFreshAt < STALE_GUARD_MS) { failed(); return done(); }
+
+        var list = sources(sha), i = 0;
+        (function next() {
+          var src = list[i];
+          fetchJSON(src).then(function (data) {
+            if (src.fresh) { lastFreshAt = Date.now(); lastSha = sha || null; }
+            show(data);
+            done();
+          }).catch(function (err) {
+            console.warn("[status] " + src.url.split("?")[0] + " failed:", err.message);
+            if (++i < list.length) return next();
+            failed();
+            done();
+          });
+        })();
+      });
     }
 
     Array.prototype.forEach.call(document.querySelectorAll(".js-refresh"), function (a) {
