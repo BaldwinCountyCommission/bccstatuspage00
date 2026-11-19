@@ -2,7 +2,7 @@
   "updated": "2026-11-19T14:45:00Z",
   "notice": "",
   "services": [
-    { "group": "Online Services", "name": "County Website", "description": "baldwincountyal.gov", "status": "operational", "note": "" },
+    { "group": "Online Services", "name": "County Website", "description": "baldwincountyal.gov", "status": "degraded", "note": "" },
     { "group": "Online Services", "name": "Online Payments", "description": "Taxes, fees and bills paid online", "status": "operational", "note": "" },
     { "group": "Online Services", "name": "Permits & Inspections Portal", "description": "Apply for permits and schedule inspections", "status": "operational", "note": "" },
     { "group": "Records & Maps", "name": "Property Search", "description": "Parcel and property records", "status": "operational", "note": "" },
