@@ -15,5 +15,12 @@
     { "group": "External", "name": "Other External Services", "description": "", "status": "operational", "note": "" }
   ],
   "incidents": [],
-  "maintenance": []
+  "maintenance": [
+    {
+  "title": "Munis / Executime",
+  "affected": ["ERP and Timeclock"],
+  "start": "2026-11-22T12:00:00Z",
+  "message": "Emails will be sent once available."
+}
+  ]
 }
