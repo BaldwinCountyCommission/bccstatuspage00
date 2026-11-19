@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<!--
+  Baldwin County, Alabama — Service Status page (baldwincountyal.gov theme)
+  Theme: BALDWIN_CLOUDFLARE_PAGES_GUIDE.md. Status data: status.json in
+  github.com/BaldwinCountyCommission/bccstatuspage00 (see README.md there).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Current status of Baldwin County, Alabama online services.">
+  <title>Service Status | Baldwin County, Alabama</title>
+
+  <!-- Questrial stands in for the site's Century Gothic body type; Nunito for headings. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Questrial&display=swap">
+
+  <style>
+    :root {
+      /* Sampled from baldwincountyal.gov */
+      --navy: #1E376C;
+      --mint: #8ED0BA;
+      --sky: #B7DCE1;
+      --red: #E7503D;
+      --white: #ffffff;
+      --card: #f9f9f9;
+      --ink: #1b2338;
+      --muted: #4d5870;
+      --rule: #dde9eb;
+      --wrap: 1200px;
+
+      /* Status colors: each text color is at least 4.5:1 on its tint and on white */
+      --ok: #1d6b47;      --ok-bg: #e4f3ec;
+      --degr: #8a5300;    --degr-bg: #fdf1dc;
+      --part: #a8401a;    --part-bg: #fde7dc;
+      --major: #b0261a;   --major-bg: #fbe3e0;
+      --maint: #1E376C;   --maint-bg: #e3ecf7;
+      --unk: #4d5870;     --unk-bg: #eceef2;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--white);
+      color: var(--ink);
+      font-family: "Century Gothic", "Questrial", "Avenir Next", Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+    .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+    [hidden] { display: none !important; }
+
+    /* ---------- Header ---------- */
+    .site-header { background: var(--navy); color: var(--white); }
+    .site-header .wrap {
+      display: flex; align-items: center; gap: 48px;
+      min-height: 150px; padding-top: 12px; padding-bottom: 12px;
+    }
+    .logo { flex: none; display: block; margin-left: 120px; }
+    .logo img { display: block; width: 250px; max-width: 100%; height: auto; }
+
+    /* ---------- Hero (mint band) ---------- */
+    .hero { background: var(--mint); }
+    .hero .wrap {
+      display: grid; grid-template-columns: 1fr 480px; gap: 48px;
+      align-items: stretch; padding-top: 0; padding-bottom: 0;
+    }
+    .hero-copy { padding: 40px 0 48px 110px; color: var(--navy); }
+    .hero-copy .kicker {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 10px; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .hero-copy .kicker svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+    .hero-copy h1 {
+      margin: 0 0 16px; font-family: inherit; font-weight: 400;
+      font-size: 34px; line-height: 1.2; text-wrap: balance;
+    }
+    .hero-copy p { margin: 0 0 28px; font-size: 18px; max-width: 34em; }
+
+    .btn-outline {
+      display: inline-block; padding: 10px 32px;
+      border: 2px solid var(--navy); border-radius: 4px;
+      color: var(--navy); background: transparent;
+      font: inherit; font-size: 16px; text-decoration: none; cursor: pointer;
+    }
+    .btn-outline:hover, .btn-outline:focus { background: var(--navy); color: var(--white); }
+
+    .hero-card {
+      background: var(--card); padding: 32px 32px 28px; color: var(--navy);
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .hero-card > h2 {
+      margin: 0 0 4px; font-family: "Nunito", Arial, sans-serif; font-weight: 800;
+      font-size: 22px; text-transform: uppercase; text-align: center;
+    }
+    .hero-card .bar {
+      margin: 10px -32px 18px; padding: 4px 12px;
+      background: var(--red); color: var(--white);
+      font-size: 13px; text-align: center; text-transform: uppercase;
+    }
+    .details {
+      margin: 0; padding: 14px 18px; background: var(--sky); color: var(--navy);
+      font-size: 14px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px;
+    }
+    .details dt { font-family: "Nunito", Arial, sans-serif; font-weight: 800; }
+    .details dd { margin: 0; overflow-wrap: anywhere; }
+
+    .ray {
+      padding: 12px 16px; background: var(--navy); color: var(--white);
+      font-size: 13px; text-align: center;
+    }
+    .ray strong { color: #ff8a7a; font-family: "Nunito", Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.02em; }
+    .ray a { color: var(--white); }
+
+    /* ---------- Status sections ---------- */
+    .status-section { padding: 40px 0 0; }
+    .section-title {
+      margin: 0 0 18px; color: var(--navy);
+      font-family: "Nunito", Arial, sans-serif; font-weight: 800; font-size: 22px; text-transform: uppercase;
+    }
+    .section-title::after {
+      content: ""; display: block; width: 56px; height: 4px; margin-top: 6px; background: var(--red);
+    }
+
+    .notice {
+      margin: 36px 0 0; padding: 14px 18px; border-radius: 6px;
+      background: var(--navy); color: var(--white);
+    }
+    .notice strong {
+      display: block; color: #ff8a7a; font-family: "Nunito", Arial, sans-serif;
+      font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;
+    }
+
+    .group { margin: 0 0 22px; border: 3px solid var(--sky); border-radius: 6px; overflow: hidden; }
+    .group-name {
+      margin: 0; padding: 8px 18px; background: var(--sky); color: var(--navy);
+      font-family: inherit; font-weight: 400; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .svc-list { margin: 0; padding: 0; list-style: none; }
+    .svc {
+      display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; align-items: center;
+      padding: 14px 18px; border-top: 1px solid var(--rule);
+    }
+    .svc:first-child { border-top: 0; }
+    .svc-name { color: var(--navy); font-size: 17px; }
+    .svc-desc { display: block; color: var(--muted); font-size: 14px; }
+    .svc-note { grid-column: 1 / -1; margin: 6px 0 0; font-size: 15px; color: var(--ink); }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+      border-radius: 999px; font-size: 14px; white-space: nowrap;
+    }
+    .pill svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+    .s-operational    { color: var(--ok);    background: var(--ok-bg); }
+    .s-degraded       { color: var(--degr);  background: var(--degr-bg); }
+    .s-partial_outage { color: var(--part);  background: var(--part-bg); }
+    .s-major_outage   { color: var(--major); background: var(--major-bg); }
+    .s-maintenance    { color: var(--maint); background: var(--maint-bg); }
+    .s-unknown        { color: var(--unk);   background: var(--unk-bg); }
+
+    .incident {
+      margin: 0 0 16px; padding: 18px 20px;
+      border: 3px solid var(--sky); border-left-width: 8px; border-radius: 6px;
+      border-left-color: var(--accent, var(--navy));
+    }
+    .incident h3 {
+      margin: 0 0 6px; color: var(--navy);
+      font-family: "Nunito", Arial, sans-serif; font-weight: 800; font-size: 19px; line-height: 1.3;
+    }
+    .incident .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 14px; color: var(--muted); }
+    .incident .affected { margin: 8px 0 0; font-size: 15px; }
+    .incident .affected b { font-weight: 400; color: var(--muted); }
+    .incident .msg { margin: 10px 0 0; }
+    .updates { margin: 14px 0 0; padding: 0; list-style: none; }
+    .updates li { position: relative; margin-left: 5px; padding: 0 0 12px 18px; border-left: 2px solid var(--rule); }
+    .updates li:last-child { padding-bottom: 0; }
+    .updates li::before {
+      content: ""; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px;
+      border-radius: 50%; background: var(--sky); border: 2px solid var(--navy);
+    }
+    .updates time { display: block; font-size: 13px; color: var(--muted); }
+    .updates .label { font-family: "Nunito", Arial, sans-serif; font-weight: 800; color: var(--navy); }
+
+    .empty { margin: 0 0 8px; color: var(--muted); }
+
+    .history summary {
+      cursor: pointer; color: var(--navy); font-size: 16px; padding: 4px 0 14px;
+    }
+    .history summary:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+
+    /* ---------- Quick help ---------- */
+    .quick { padding: 30px 0 40px; }
+    .quick .wrap { display: grid; grid-template-columns: 300px 1fr; gap: 40px; align-items: center; }
+    .quick-title { justify-self: center; text-align: center; color: var(--navy); }
+    .quick-title .big { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 36px; line-height: 1; }
+    .quick-title .small {
+      display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 18px; text-transform: uppercase;
+    }
+    .quick-title .small::before, .quick-title .small::after {
+      content: ""; flex: 1; min-width: 36px; height: 2px; background: var(--navy);
+    }
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 10px;
+      margin: 0; padding: 0; list-style: none;
+    }
+    .quick-grid a {
+      display: flex; align-items: center; justify-content: center; min-height: 50px; padding: 8px 12px;
+      border: 3px solid var(--sky); border-radius: 6px; background: var(--white); color: var(--navy);
+      font-size: 17px; text-align: center; text-decoration: none; text-transform: uppercase;
+    }
+    .quick-grid a:hover, .quick-grid a:focus { background: var(--sky); }
+
+    /* ---------- Footer ---------- */
+    .wave { display: block; width: 100%; height: 150px; }
+    .site-footer { background: var(--navy); color: var(--white); margin-top: -1px; }
+    .site-footer .wrap {
+      display: grid; grid-template-columns: 240px 1fr 380px; gap: 32px; align-items: center;
+      padding-top: 10px; padding-bottom: 28px;
+    }
+    .seal img { display: block; width: 240px; max-width: 100%; height: auto; }
+    .contact { text-align: center; font-size: 17px; line-height: 1.45; }
+    .contact p { margin: 0; }
+    .contact .gap { margin-top: 24px; }
+    .contact a { color: var(--white); text-decoration: none; }
+    .contact a:hover, .contact a:focus { text-decoration: underline; }
+
+    .social { display: flex; gap: 20px; justify-content: flex-end; margin: 0; padding: 0; list-style: none; }
+    .social a {
+      display: grid; place-items: center; width: 80px; height: 80px; border-radius: 50%;
+      background: var(--sky); color: var(--navy);
+    }
+    .social a:hover, .social a:focus { background: var(--white); }
+    .social svg { width: 40px; height: 40px; fill: currentColor; }
+
+    a:focus-visible, button:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1100px) {
+      .logo { margin-left: 0; }
+      .hero-copy { padding-left: 0; }
+      .hero .wrap { grid-template-columns: 1fr 420px; }
+      .site-footer .wrap { grid-template-columns: 180px 1fr auto; }
+      .social a { width: 60px; height: 60px; }
+      .social svg { width: 30px; height: 30px; }
+    }
+
+    @media (max-width: 860px) {
+      .site-header .wrap { flex-direction: column; gap: 14px; padding-top: 18px; padding-bottom: 18px; }
+      .hero .wrap { grid-template-columns: 1fr; gap: 0; padding: 0; }
+      .hero-copy { padding: 32px 24px 32px; }
+      .hero-copy h1 { font-size: 28px; }
+      .hero-card { padding: 28px 20px 24px; }
+      .hero-card .bar { margin-left: -20px; margin-right: -20px; }
+      .quick .wrap { grid-template-columns: 1fr; gap: 20px; }
+      .quick-grid { grid-template-columns: 1fr 1fr; }
+      .quick-grid a { font-size: 16px; }
+      .wave { height: 80px; }
+      .site-footer .wrap { grid-template-columns: 1fr; justify-items: center; gap: 24px; }
+      .seal img { width: 160px; }
+      .social { justify-content: center; }
+    }
+
+    @media (max-width: 480px) {
+      .wrap { padding: 0 16px; }
+      .logo img { width: 210px; }
+      .svc { grid-template-columns: 1fr; gap: 8px; }
+      .svc .pill { justify-self: start; }
+      .incident { padding: 16px 14px; }
+      .quick-grid { grid-template-columns: 1fr; }
+      .social { gap: 12px; }
+      .social a { width: 52px; height: 52px; }
+      .social svg { width: 26px; height: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <!-- Status icons -->
+    <symbol id="st-operational" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></symbol>
+    <symbol id="st-degraded" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
+    <symbol id="st-partial_outage" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18V4a8 8 0 0 1 0 16z"/></symbol>
+    <symbol id="st-major_outage" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    <symbol id="st-maintenance" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></symbol>
+    <symbol id="st-unknown" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 17h-2v-2h2v2zm2.07-7.75-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26A2 2 0 1 0 10 9H8a4 4 0 1 1 7.07 2.25z"/></symbol>
+    <!-- Social icons: Simple Icons v11.0.0 (CC0) -->
+    <symbol id="i-facebook" viewBox="0 0 24 24"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/></symbol>
+    <symbol id="i-youtube" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></symbol>
+  </svg>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="https://baldwincountyal.gov/">
+        <img src="https://res.cloudinary.com/baldwincounty/image/upload/v1777638845/Background_rqlcz8.png"
+             width="250" height="150" alt="Baldwin County, Alabama — It's All Here">
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="wrap">
+        <div class="hero-copy">
+          <p class="kicker"><svg aria-hidden="true" id="kicker-icon"><use href="#st-unknown"/></svg><span id="kicker">Service status</span></p>
+          <h1 id="title" aria-live="polite">Checking the status of county services…</h1>
+          <p id="summary">This page shows whether Baldwin County's online services are working, and updates on its own every minute.</p>
+          <noscript><p>This page needs JavaScript to show live status. If a county service isn't working for you, call 251.580.1695.</p></noscript>
+          <a class="btn-outline js-refresh" href="">Refresh Status</a>
+        </div>
+
+        <aside class="hero-card" aria-label="Status summary">
+          <h2>Service Status</h2>
+          <p class="bar">Status summary</p>
+          <dl class="details">
+            <dt>Services</dt><dd id="d-services">Checking…</dd>
+            <dt>Active incidents</dt><dd id="d-incidents">Checking…</dd>
+            <dt>Last updated</dt><dd id="d-updated">Checking…</dd>
+            <dt>Last checked</dt><dd id="d-checked">Checking…</dd>
+          </dl>
+          <div class="ray">
+            <strong>Something not working?</strong><br>
+            Call <a href="tel:+12515801695">251.580.1695</a> and tell us what you're seeing.
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <div class="notice" id="notice" hidden role="note"><strong>Notice</strong><span id="notice-text"></span></div>
+
+      <section class="status-section" id="incidents-section" aria-labelledby="incidents-title" hidden>
+        <h2 class="section-title" id="incidents-title">Current Incidents</h2>
+        <div id="incidents"></div>
+      </section>
+
+      <section class="status-section" id="maint-section" aria-labelledby="maint-title" hidden>
+        <h2 class="section-title" id="maint-title">Scheduled Maintenance</h2>
+        <div id="maintenance"></div>
+      </section>
+
+      <section class="status-section" aria-labelledby="services-title">
+        <h2 class="section-title" id="services-title">Services</h2>
+        <div id="services"><p class="empty">Loading services…</p></div>
+      </section>
+
+      <section class="status-section" aria-labelledby="history-title">
+        <h2 class="section-title" id="history-title">Past Incidents</h2>
+        <div id="history"><p class="empty">Loading…</p></div>
+      </section>
+    </div>
+
+    <section class="quick" aria-labelledby="quick-title">
+      <div class="wrap">
+        <p class="quick-title" id="quick-title">
+          <span class="big">QUICK</span>
+          <span class="small">Help</span>
+        </p>
+        <ul class="quick-grid">
+          <li><a class="js-refresh" href="">Refresh Status</a></li>
+          <li><a href="tel:+12515801695">Call Citizen Services</a></li>
+          <li><a href="https://baldwincountyal.gov/">County Homepage</a></li>
+          <li><a href="https://www.facebook.com/BaldwinCountyCommission">Facebook Updates</a></li>
+          <li><a href="https://twitter.com/BCCommission">X Updates</a></li>
+          <li><a href="https://www.instagram.com/baldwincountycommission/">Instagram Updates</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <svg class="wave" viewBox="0 0 1440 150" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,0 C260,110 620,150 980,105 C1180,80 1330,95 1440,150 L1440,150 L0,150 Z" fill="#B7DCE1"/>
+    <path d="M0,70 C300,150 700,160 1000,125 C1200,102 1340,115 1440,150 L1440,150 L0,150 Z" fill="#1E376C"/>
+  </svg>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="seal">
+        <img src="https://baldwincountyal.gov/images/default-source/webmaster5/bcclogosealwhite.png"
+             width="240" height="240" alt="The Seal of Baldwin County, Alabama"
+             onerror="this.style.visibility='hidden'">
+      </div>
+
+      <div class="contact">
+        <p>Contact Baldwin County Citizen Service Center</p>
+        <p><a href="tel:+12515801695">251.580.1695</a></p>
+        <!-- TODO: add the real addresses, then uncomment.
+        <p><a href="mailto:ADDRESS">Email Citizen Services</a></p>
+        <p><a href="mailto:ADDRESS">Email Webmaster for Web Inquiry</a></p>
+        <p class="gap"><a href="URL">Accessibility Statement</a></p>
+        -->
+        <p class="gap"><span id="yr">2026</span>&nbsp; Baldwin County Commission, Alabama. All rights reserved.</p>
+        <p>Powered by BCC CIS</p>
+      </div>
+
+      <ul class="social">
+        <li><a href="https://www.facebook.com/BaldwinCountyCommission" aria-label="Facebook"><svg aria-hidden="true"><use href="#i-facebook"/></svg></a></li>
+        <li><a href="https://twitter.com/BCCommission" aria-label="X"><svg aria-hidden="true"><use href="#i-x"/></svg></a></li>
+        <li><a href="https://www.instagram.com/baldwincountycommission/" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-instagram"/></svg></a></li>
+        <li><a href="https://www.youtube.com/user/BCCommission" aria-label="YouTube"><svg aria-hidden="true"><use href="#i-youtube"/></svg></a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    /* ---------- Where the status comes from ---------- */
+    var REPO = { owner: "BaldwinCountyCommission", name: "bccstatuspage00", branch: "main", file: "status.json" };
+    var REFRESH_MS = 60 * 1000;     // re-check every minute while the tab is visible
+    var HISTORY_DAYS = 14;          // resolved incidents shown under "Past Incidents"
+
+    function sources() {
+      var path = REPO.owner + "/" + REPO.name;
+      return [
+        // 1. raw file (CDN, no rate limit). Query string skips stale browser caches.
+        { url: "https://raw.githubusercontent.com/" + path + "/" + REPO.branch + "/" + REPO.file + "?t=" + Date.now() },
+        // 2. fallback: GitHub API (always current, but limited to 60 requests/hour per visitor)
+        { url: "https://api.github.com/repos/" + path + "/contents/" + REPO.file + "?ref=" + REPO.branch,
+          headers: { Accept: "application/vnd.github.raw+json" } }
+      ];
+    }
+
+    /* ---------- Status vocabulary ---------- */
+    var STATUS = {
+      operational:    { rank: 0, label: "Operational" },
+      maintenance:    { rank: 1, label: "Maintenance" },
+      degraded:       { rank: 2, label: "Slower than usual" },
+      partial_outage: { rank: 3, label: "Partial outage" },
+      major_outage:   { rank: 4, label: "Outage" },
+      unknown:        { rank: -1, label: "Status unknown" }
+    };
+    var ACCENT = {
+      operational: "var(--ok)", maintenance: "var(--maint)", degraded: "var(--degr)",
+      partial_outage: "var(--part)", major_outage: "var(--major)", unknown: "var(--unk)"
+    };
+    var INCIDENT_STAGE = {
+      investigating: "Investigating", identified: "Cause identified",
+      monitoring: "Monitoring a fix", resolved: "Resolved", scheduled: "Scheduled",
+      in_progress: "In progress", completed: "Completed"
+    };
+    var HERO = {
+      operational: {
+        kicker: "All systems operational",
+        h1: "All county online services are running normally.",
+        body: "Everything we track below is working as expected. This page updates on its own every minute."
+      },
+      maintenance: {
+        kicker: "Scheduled maintenance",
+        h1: "Some services are offline for planned maintenance.",
+        body: "They'll be back when the work is finished. The maintenance window is listed below."
+      },
+      degraded: {
+        kicker: "Slower than usual",
+        h1: "Some services are running slower than usual.",
+        body: "They're still available, but pages or payments may take longer to load. Details are below."
+      },
+      partial_outage: {
+        kicker: "Partial outage",
+        h1: "Some county services aren't working right now.",
+        body: "We know about the problem and are working on it. If you were submitting a form or payment, check for a confirmation before trying again."
+      },
+      major_outage: {
+        kicker: "Service outage",
+        h1: "We're sorry, several county services are unavailable right now.",
+        body: "We're working to restore them as quickly as possible. If you were submitting a form or payment, check for a confirmation before trying again."
+      },
+      error: {
+        kicker: "Status unavailable",
+        h1: "We couldn't load the latest status right now.",
+        body: "This doesn't mean anything is down. Please try again in a moment, or call 251.580.1695 if a service isn't working for you."
+      }
+    };
+
+    /* ---------- Helpers ---------- */
+    var $ = function (id) { return document.getElementById(id); };
+
+    function el(tag, attrs) {
+      var node = document.createElement(tag);
+      if (attrs) for (var k in attrs) {
+        if (k === "text") node.textContent = attrs[k];
+        else if (k === "style") node.style.cssText = attrs[k];
+        else node.setAttribute(k, attrs[k]);
+      }
+      (function add(list) {
+        for (var i = 0; i < list.length; i++) {
+          var c = list[i];
+          if (c == null || c === false) continue;
+          if (Array.isArray(c)) add(c);
+          else node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+        }
+      })(Array.prototype.slice.call(arguments, 2));
+      return node;
+    }
+
+    function icon(id) {
+      var ns = "http://www.w3.org/2000/svg";
+      var svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("aria-hidden", "true");
+      var use = document.createElementNS(ns, "use");
+      use.setAttribute("href", "#st-" + id);
+      svg.appendChild(use);
+      return svg;
+    }
+
+    function normStatus(s) {
+      s = String(s || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+      if (s === "major" || s === "outage" || s === "down") s = "major_outage";
+      if (s === "partial") s = "partial_outage";
+      if (s === "ok" || s === "up") s = "operational";
+      return STATUS[s] ? s : "unknown";
+    }
+
+    function pill(status) {
+      return el("span", { "class": "pill s-" + status }, icon(status), STATUS[status].label);
+    }
+
+    function toDate(v) {
+      if (!v) return null;
+      var d = new Date(v);
+      return isNaN(d) ? null : d;
+    }
+
+    var fmtFull = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Chicago", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit", timeZoneName: "short"
+    });
+    var fmtTime = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Chicago", hour: "numeric", minute: "2-digit", timeZoneName: "short"
+    });
+    function when(d) { return d ? fmtFull.format(d) : "—"; }
+
+    function timeEl(d) {
+      return d ? el("time", { datetime: d.toISOString(), text: when(d) }) : el("span", { text: "—" });
+    }
+
+    function setText(id, text) {
+      var n = $(id);
+      if (n && n.textContent !== text) n.textContent = text;
+    }
+
+    function asArray(v) { return Array.isArray(v) ? v : []; }
+    function str(v) { return v == null ? "" : String(v).trim(); }
+
+    /* ---------- Rendering ---------- */
+    function renderHero(key) {
+      var h = HERO[key];
+      setText("kicker", h.kicker);
+      setText("title", h.h1);
+      setText("summary", h.body);
+      $("kicker-icon").firstElementChild.setAttribute("href", "#st-" + (key === "error" ? "unknown" : key));
+    }
+
+    function renderServices(services) {
+      var box = $("services");
+      box.textContent = "";
+      if (!services.length) {
+        box.appendChild(el("p", { "class": "empty", text: "No services are listed yet." }));
+        return;
+      }
+      var groups = [], byName = {};
+      services.forEach(function (s) {
+        var g = s.group || "Services";
+        if (!byName[g]) { byName[g] = []; groups.push(g); }
+        byName[g].push(s);
+      });
+      groups.forEach(function (g, gi) {
+        var headId = "grp-" + gi;
+        var list = el("ul", { "class": "svc-list", "aria-labelledby": headId });
+        byName[g].forEach(function (s) {
+          list.appendChild(el("li", { "class": "svc" },
+            el("div", null,
+              el("span", { "class": "svc-name", text: s.name }),
+              s.description ? el("span", { "class": "svc-desc", text: s.description }) : null),
+            pill(s.status),
+            s.note ? el("p", { "class": "svc-note", text: s.note }) : null
+          ));
+        });
+        box.appendChild(el("div", { "class": "group" },
+          el("h3", { "class": "group-name", id: headId, text: g }), list));
+      });
+    }
+
+    function incidentCard(inc, kind) {
+      var updates = asArray(inc.updates)
+        .map(function (u) { return { time: toDate(u && u.time), status: str(u && u.status).toLowerCase(), message: str(u && u.message) }; })
+        .filter(function (u) { return u.message; })
+        .sort(function (a, b) { return (b.time || 0) - (a.time || 0); });
+
+      var meta = el("div", { "class": "meta" });
+      if (kind === "maintenance") {
+        meta.appendChild(pill("maintenance"));
+        var s = toDate(inc.start), e = toDate(inc.end);
+        meta.appendChild(el("span", null, timeEl(s), " to ", timeEl(e)));
+      } else {
+        meta.appendChild(pill(inc.impact));
+        meta.appendChild(el("span", { text: INCIDENT_STAGE[inc.stage] || "Investigating" }));
+        meta.appendChild(el("span", null, "Started ", timeEl(toDate(inc.started))));
+        var r = toDate(inc.resolved);
+        if (r) meta.appendChild(el("span", null, "Resolved ", timeEl(r)));
+      }
+
+      var affected = asArray(inc.affected).map(str).filter(Boolean);
+      return el("article", { "class": "incident", style: "--accent:" + ACCENT[kind === "maintenance" ? "maintenance" : inc.impact] },
+        el("h3", { text: str(inc.title) || (kind === "maintenance" ? "Scheduled maintenance" : "Service issue") }),
+        meta,
+        affected.length ? el("p", { "class": "affected" }, el("b", { text: "Affects: " }), affected.join(", ")) : null,
+        str(inc.message) ? el("p", { "class": "msg", text: str(inc.message) }) : null,
+        updates.length ? el("ol", { "class": "updates", "aria-label": "Updates, newest first" },
+          updates.map(function (u) {
+            return el("li", null,
+              u.time ? el("time", { datetime: u.time.toISOString(), text: when(u.time) }) : null,
+              u.status && INCIDENT_STAGE[u.status] ? el("span", { "class": "label", text: INCIDENT_STAGE[u.status] + ": " }) : null,
+              u.message);
+          })) : null
+      );
+    }
+
+    function render(data) {
+      var now = new Date();
+
+      var services = asArray(data.services).map(function (s) {
+        return { group: str(s && s.group), name: str(s && s.name) || "Unnamed service",
+                 description: str(s && s.description), status: normStatus(s && s.status), note: str(s && s.note) };
+      });
+
+      var incidents = asArray(data.incidents).map(function (i) {
+        i = i || {};
+        return { title: i.title, impact: normStatus(i.impact || "partial_outage"), stage: str(i.status).toLowerCase(),
+                 started: i.started, resolved: i.resolved, affected: i.affected, message: i.message, updates: i.updates };
+      });
+      var active = incidents.filter(function (i) { return !toDate(i.resolved) && i.stage !== "resolved"; });
+      var cutoff = now - HISTORY_DAYS * 864e5;
+      var past = incidents.filter(function (i) {
+        var r = toDate(i.resolved);
+        return (r || i.stage === "resolved") && (!r || r >= cutoff);
+      }).sort(function (a, b) { return (toDate(b.resolved) || 0) - (toDate(a.resolved) || 0); });
+
+      var maint = asArray(data.maintenance).filter(function (m) {
+        var e = toDate(m && m.end);
+        return m && (!e || e > now);
+      }).sort(function (a, b) { return (toDate(a.start) || 0) - (toDate(b.start) || 0); });
+
+      // Overall = worst of service statuses and active incident impacts
+      var worst = "operational";
+      services.map(function (s) { return s.status; })
+        .concat(active.map(function (i) { return i.impact; }))
+        .forEach(function (st) { if (STATUS[st].rank > STATUS[worst].rank) worst = st; });
+      renderHero(worst);
+
+      // Hero card
+      var ok = services.filter(function (s) { return s.status === "operational"; }).length;
+      setText("d-services", services.length ? ok + " of " + services.length + " running normally" : "None listed");
+      setText("d-incidents", active.length ? String(active.length) : "None");
+      setText("d-updated", when(toDate(data.updated)));
+      setText("d-checked", fmtTime.format(now));
+
+      // Notice
+      var notice = str(data.notice);
+      $("notice").hidden = !notice;
+      setText("notice-text", notice);
+
+      // Sections
+      var incBox = $("incidents");
+      incBox.textContent = "";
+      active.forEach(function (i) { incBox.appendChild(incidentCard(i, "incident")); });
+      $("incidents-section").hidden = !active.length;
+
+      var mBox = $("maintenance");
+      mBox.textContent = "";
+      maint.forEach(function (m) { mBox.appendChild(incidentCard(m, "maintenance")); });
+      $("maint-section").hidden = !maint.length;
+
+      renderServices(services);
+
+      var hBox = $("history");
+      hBox.textContent = "";
+      if (!past.length) {
+        hBox.appendChild(el("p", { "class": "empty", text: "No incidents in the last " + HISTORY_DAYS + " days." }));
+      } else {
+        var det = el("details", { "class": "history" },
+          el("summary", { text: "Show " + past.length + " resolved incident" + (past.length === 1 ? "" : "s") + " from the last " + HISTORY_DAYS + " days" }));
+        past.forEach(function (i) { det.appendChild(incidentCard(i, "incident")); });
+        hBox.appendChild(det);
+      }
+    }
+
+    function renderError() {
+      renderHero("error");
+      setText("d-checked", fmtTime.format(new Date()) + " (couldn't load)");
+      ["d-services", "d-incidents", "d-updated"].forEach(function (id) {
+        if ($(id).textContent === "Checking…") setText(id, "—");
+      });
+      if ($("services").querySelector(".empty")) setText("services", "Service list couldn't be loaded.");
+      if ($("history").querySelector(".empty")) setText("history", "");
+    }
+
+    /* ---------- Loading ---------- */
+    var loading = false, lastGood = null;
+
+    function fetchJSON(src) {
+      return fetch(src.url, { cache: "no-store", headers: src.headers || {} }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function (j) {
+        if (!j || typeof j !== "object" || !Array.isArray(j.services)) throw new Error("Unexpected format");
+        return j;
+      });
+    }
+
+    function load() {
+      if (loading) return;
+      loading = true;
+      var list = sources(), i = 0;
+      (function next() {
+        fetchJSON(list[i]).then(function (data) {
+          lastGood = data;
+          try { render(data); } catch (e) { console.error("[status] render failed", e); renderError(); }
+          loading = false;
+        }).catch(function (err) {
+          console.warn("[status] " + list[i].url.split("?")[0] + " failed:", err.message);
+          i++;
+          if (i < list.length) return next();
+          loading = false;
+          // Keep showing the last good data if we had it; otherwise show the error state
+          if (lastGood) setText("d-checked", fmtTime.format(new Date()) + " (retrying)");
+          else renderError();
+        });
+      })();
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll(".js-refresh"), function (a) {
+      a.addEventListener("click", function (e) { e.preventDefault(); load(); });
+    });
+
+    setInterval(function () { if (!document.hidden) load(); }, REFRESH_MS);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+
+    try { $("yr").textContent = new Date().getFullYear(); } catch (e) {}
+    load();
+  })();
+  </script>
+</body>
+</html>

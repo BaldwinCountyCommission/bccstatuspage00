@@ -1,0 +1,15 @@
+{
+  "updated": "2026-11-19T14:45:00Z",
+  "notice": "",
+  "services": [
+    { "group": "Online Services", "name": "County Website", "description": "baldwincountyal.gov", "status": "operational", "note": "" },
+    { "group": "Online Services", "name": "Online Payments", "description": "Taxes, fees and bills paid online", "status": "operational", "note": "" },
+    { "group": "Online Services", "name": "Permits & Inspections Portal", "description": "Apply for permits and schedule inspections", "status": "operational", "note": "" },
+    { "group": "Records & Maps", "name": "Property Search", "description": "Parcel and property records", "status": "operational", "note": "" },
+    { "group": "Records & Maps", "name": "GIS Maps", "description": "Interactive county maps", "status": "operational", "note": "" },
+    { "group": "Phone & Email", "name": "Citizen Service Center Phone Line", "description": "251.580.1695", "status": "operational", "note": "" },
+    { "group": "Phone & Email", "name": "County Email", "description": "Email to county offices", "status": "operational", "note": "" }
+  ],
+  "incidents": [],
+  "maintenance": []
+}
