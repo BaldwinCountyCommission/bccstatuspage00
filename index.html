@@ -112,12 +112,6 @@
     .details dt { font-family: "Nunito", Arial, sans-serif; font-weight: 800; }
     .details dd { margin: 0; overflow-wrap: anywhere; }
 
-    .ray {
-      padding: 12px 16px; background: var(--navy); color: var(--white);
-      font-size: 13px; text-align: center;
-    }
-    .ray strong { color: #ff8a7a; font-family: "Nunito", Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.02em; }
-    .ray a { color: var(--white); }
 
     /* ---------- Status sections ---------- */
     .status-section { padding: 40px 0 0; }
@@ -207,9 +201,10 @@
       content: ""; flex: 1; min-width: 36px; height: 2px; background: var(--navy);
     }
     .quick-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 10px;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 10px;
       margin: 0; padding: 0; list-style: none;
     }
+    .quick-grid li { flex: 0 0 calc((100% - 20px) / 3); }
     .quick-grid a {
       display: flex; align-items: center; justify-content: center; min-height: 50px; padding: 8px 12px;
       border: 3px solid var(--sky); border-radius: 6px; background: var(--white); color: var(--navy);
@@ -259,7 +254,7 @@
       .hero-card { padding: 28px 20px 24px; }
       .hero-card .bar { margin-left: -20px; margin-right: -20px; }
       .quick .wrap { grid-template-columns: 1fr; gap: 20px; }
-      .quick-grid { grid-template-columns: 1fr 1fr; }
+      .quick-grid li { flex-basis: calc((100% - 10px) / 2); }
       .quick-grid a { font-size: 16px; }
       .wave { height: 80px; }
       .site-footer .wrap { grid-template-columns: 1fr; justify-items: center; gap: 24px; }
@@ -273,7 +268,7 @@
       .svc { grid-template-columns: 1fr; gap: 8px; }
       .svc .pill { justify-self: start; }
       .incident { padding: 16px 14px; }
-      .quick-grid { grid-template-columns: 1fr; }
+      .quick-grid li { flex-basis: 100%; }
       .social { gap: 12px; }
       .social a { width: 52px; height: 52px; }
       .social svg { width: 26px; height: 26px; }
@@ -313,7 +308,7 @@
           <p class="kicker"><svg aria-hidden="true" id="kicker-icon"><use href="#st-unknown"/></svg><span id="kicker">Service status</span></p>
           <h1 id="title" aria-live="polite">Checking the status of county services…</h1>
           <p id="summary">This page shows whether Baldwin County's online services are working, and updates on its own every minute.</p>
-          <noscript><p>This page needs JavaScript to show live status. If a county service isn't working for you, call 251.580.1695.</p></noscript>
+          <noscript><p>This page needs JavaScript to show live status.</p></noscript>
           <a class="btn-outline js-refresh" href="">Refresh Status</a>
         </div>
 
@@ -325,11 +320,8 @@
             <dt>Active incidents</dt><dd id="d-incidents">Checking…</dd>
             <dt>Last updated</dt><dd id="d-updated">Checking…</dd>
             <dt>Last checked</dt><dd id="d-checked">Checking…</dd>
+            <dt>Next check</dt><dd id="d-next">In 60 seconds</dd>
           </dl>
-          <div class="ray">
-            <strong>Something not working?</strong><br>
-            Call <a href="tel:+12515801695">251.580.1695</a> and tell us what you're seeing.
-          </div>
         </aside>
       </div>
     </section>
@@ -366,7 +358,6 @@
         </p>
         <ul class="quick-grid">
           <li><a class="js-refresh" href="">Refresh Status</a></li>
-          <li><a href="tel:+12515801695">Call Citizen Services</a></li>
           <li><a href="https://baldwincountyal.gov/">County Homepage</a></li>
           <li><a href="https://www.facebook.com/BaldwinCountyCommission">Facebook Updates</a></li>
           <li><a href="https://twitter.com/BCCommission">X Updates</a></li>
@@ -390,14 +381,10 @@
       </div>
 
       <div class="contact">
-        <p>Contact Baldwin County Citizen Service Center</p>
-        <p><a href="tel:+12515801695">251.580.1695</a></p>
-        <!-- TODO: add the real addresses, then uncomment.
-        <p><a href="mailto:ADDRESS">Email Citizen Services</a></p>
-        <p><a href="mailto:ADDRESS">Email Webmaster for Web Inquiry</a></p>
-        <p class="gap"><a href="URL">Accessibility Statement</a></p>
+        <!-- TODO: add the Accessibility Statement URL, then uncomment.
+        <p><a href="URL">Accessibility Statement</a></p>
         -->
-        <p class="gap"><span id="yr">2026</span>&nbsp; Baldwin County Commission, Alabama. All rights reserved.</p>
+        <p><span id="yr">2026</span>&nbsp; Baldwin County Commission, Alabama. All rights reserved.</p>
         <p>Powered by BCC CIS</p>
       </div>
 
@@ -477,7 +464,7 @@
       error: {
         kicker: "Status unavailable",
         h1: "We couldn't load the latest status right now.",
-        body: "This doesn't mean anything is down. Please try again in a moment, or call 251.580.1695 if a service isn't working for you."
+        body: "This doesn't mean anything is down. The page will try again automatically in a moment."
       }
     };
 
@@ -705,7 +692,13 @@
     }
 
     /* ---------- Loading ---------- */
-    var loading = false, lastGood = null;
+    var loading = false, lastGood = null, nextAt = Date.now() + REFRESH_MS;
+
+    function done() {
+      loading = false;
+      nextAt = Date.now() + REFRESH_MS;
+      tick();
+    }
 
     function fetchJSON(src) {
       return fetch(src.url, { cache: "no-store", headers: src.headers || {} }).then(function (r) {
@@ -720,17 +713,18 @@
     function load() {
       if (loading) return;
       loading = true;
+      setText("d-next", "Checking now…");
       var list = sources(), i = 0;
       (function next() {
         fetchJSON(list[i]).then(function (data) {
           lastGood = data;
           try { render(data); } catch (e) { console.error("[status] render failed", e); renderError(); }
-          loading = false;
+          done();
         }).catch(function (err) {
           console.warn("[status] " + list[i].url.split("?")[0] + " failed:", err.message);
           i++;
           if (i < list.length) return next();
-          loading = false;
+          done();
           // Keep showing the last good data if we had it; otherwise show the error state
           if (lastGood) setText("d-checked", fmtTime.format(new Date()) + " (retrying)");
           else renderError();
@@ -742,8 +736,22 @@
       a.addEventListener("click", function (e) { e.preventDefault(); load(); });
     });
 
-    setInterval(function () { if (!document.hidden) load(); }, REFRESH_MS);
-    document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+    /* ---------- Auto-refresh every 60 seconds ----------
+       The countdown restarts after each check (automatic or Refresh Status).
+       Checks pause while the tab is in the background and run straight away
+       when the visitor comes back if one is due. */
+    function tick() {
+      if (loading) { setText("d-next", "Checking now…"); return; }
+      var secs = Math.max(0, Math.ceil((nextAt - Date.now()) / 1000));
+      if (secs === 0) {
+        if (!document.hidden) load();
+        else setText("d-next", "When you return to this tab");
+        return;
+      }
+      setText("d-next", "In " + secs + " second" + (secs === 1 ? "" : "s"));
+    }
+    setInterval(tick, 1000);
+    document.addEventListener("visibilitychange", tick);
 
     try { $("yr").textContent = new Date().getFullYear(); } catch (e) {}
     load();
