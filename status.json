@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-19T19:07:10Z",
+  "updated": "2026-11-19T19:08:55Z",
   "notice": "",
   "services": [
     {
@@ -41,8 +41,8 @@
       "group": "External",
       "name": "Microsoft",
       "description": "Outlook, Teams, Copilot, ect",
-      "status": "partial_outage",
-      "note": "Outlook not sending or receiving."
+      "status": "operational",
+      "note": ""
     },
     {
       "group": "External",
