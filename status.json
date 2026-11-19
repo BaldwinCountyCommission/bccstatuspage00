@@ -1,14 +1,18 @@
 {
-  "updated": "2026-11-19T14:45:00Z",
+  "updated": "2026-11-19T09:19:00-06:00",
   "notice": "",
   "services": [
-    { "group": "Online Services", "name": "County Website", "description": "baldwincountyal.gov", "status": "degraded", "note": "" },
-    { "group": "Online Services", "name": "Online Payments", "description": "Taxes, fees and bills paid online", "status": "partial_outage", "note": "" },
-    { "group": "Online Services", "name": "Permits & Inspections Portal", "description": "Apply for permits and schedule inspections", "status": "operational", "note": "" },
-    { "group": "Records & Maps", "name": "Property Search", "description": "Parcel and property records", "status": "operational", "note": "" },
-    { "group": "Records & Maps", "name": "GIS Maps", "description": "Interactive county maps", "status": "operational", "note": "" },
-    { "group": "Phone & Email", "name": "Citizen Service Center Phone Line", "description": "251.580.1695", "status": "operational", "note": "" },
-    { "group": "Phone & Email", "name": "County Email", "description": "Email to county offices", "status": "operational", "note": "" }
+    { "group": "Internal", "name": "Munis", "description": "", "status": "operational", "note": "" },
+    { "group": "Internal", "name": "Executime", "description": "", "status": "operational", "note": "" },
+    { "group": "Internal", "name": "Assurance", "description": "", "status": "operational", "note": "" },
+    { "group": "Internal", "name": "Network", "description": "", "status": "operational", "note": "" },
+    { "group": "Internal", "name": "Other Internal Services", "description": "", "status": "operational", "note": "" },
+
+    { "group": "External", "name": "Microsoft", "description": "", "status": "operational", "note": "" },
+    { "group": "External", "name": "Cloudflare", "description": "", "status": "operational", "note": "" },
+    { "group": "External", "name": "Internet", "description": "", "status": "operational", "note": "" },
+    { "group": "External", "name": "Remote Support Tools", "description": "", "status": "operational", "note": "" },
+    { "group": "External", "name": "Other External Services", "description": "", "status": "operational", "note": "" }
   ],
   "incidents": [],
   "maintenance": []
